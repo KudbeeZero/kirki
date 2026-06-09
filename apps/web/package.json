@@ -1,0 +1,31 @@
+{
+  "name": "@simcoin/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simcoin web app — the primary, mobile-first client. Duolingo for crypto trading.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p ${WEB_PORT:-3000}",
+    "build": "next build",
+    "start": "next start -p ${WEB_PORT:-3000}",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@simcoin/sdk": "workspace:*",
+    "@simcoin/types": "workspace:*",
+    "@simcoin/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.0"
+  }
+}

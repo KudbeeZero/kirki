@@ -1,42 +1,44 @@
-# npm #
-#######
-node_modules
-npm-debug.log
-package-lock.json
+# Dependencies
+node_modules/
+.pnp.*
+.yarn/*
 
-# grunt-contrib-sass #
-######################
-.sass-cache
+# Build output
+dist/
+build/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
 
-# composer #
-############
-vendor
-composer.lock
+# Env & secrets
+.env
+.env.*
+!.env.example
 
-# OS generated files #
-######################
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+logs/
+
+# Testing
+coverage/
+.nyc_output/
+
+# OS / editor
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
 
-# Jekyll #
-##########
-_site
+# Mobile / Expo
+.expo/
+*.jks
+*.p8
+*.p12
 
-# SVN #
-#######
-.svn
-svn
-
-# PHPUNIT #
-###########
-build/logs
-
-# Local Dev files #
-###################
-.phpcs.xml
-phpcs.xml
+# Database
+*.sqlite
+pgdata/

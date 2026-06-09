@@ -1,0 +1,42 @@
+# Local development infrastructure for Simcoin.
+# Starts the system-of-record (Postgres) and the cache/realtime bus (Redis).
+# Application services run on the host via `pnpm dev`.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: simcoin-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-simcoin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-simcoin}
+      POSTGRES_DB: ${POSTGRES_DB:-simcoin}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schemas:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-simcoin}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: simcoin-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:

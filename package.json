@@ -1,35 +1,35 @@
 {
-  "name": "kirki-toolkit",
-  "version": "3.0.35.3",
-  "author": "Aristeides Stathopoulos",
-  "homepage": "https://kirki.org",
+  "name": "simcoin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Duolingo for crypto trading — a fantasy crypto trading platform with educational gamification.",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/aristath/kirki"
-  },
-  "bugs": {
-    "url": "https://github.com/aristath/kirki/issues"
-  },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://opensource.org/licenses/MIT"
-    }
-  ],
+  "packageManager": "pnpm@9.12.0",
   "engines": {
-    "node": ">= 0.10.0"
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*",
+    "blockchain/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "db:migrate": "node database/migrate.mjs up",
+    "db:seed": "node database/migrate.mjs seed"
   },
   "devDependencies": {
-    "grunt": "^1.0.3",
-    "grunt-contrib-clean": "*",
-    "grunt-contrib-concat": "*",
-    "grunt-contrib-sass": "*",
-    "grunt-contrib-uglify": "*",
-    "grunt-contrib-watch": "*",
-    "grunt-curl": "*",
-    "grunt-http": "*",
-    "grunt-jscs": "*",
-    "grunt-wp-readme-to-markdown": "*"
+    "prettier": "^3.3.0",
+    "turbo": "^2.1.0",
+    "typescript": "^5.6.0"
   }
 }

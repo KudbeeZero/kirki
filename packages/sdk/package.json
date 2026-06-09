@@ -1,0 +1,24 @@
+{
+  "name": "@simcoin/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typed client SDK for the Simcoin public API, consumed by web, mobile, and admin apps.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@simcoin/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}
