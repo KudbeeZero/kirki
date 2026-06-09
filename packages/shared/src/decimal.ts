@@ -30,7 +30,7 @@ export function toMinor(value: Decimal | number, scale = SCALE): bigint {
   }
   const negative = str.startsWith('-');
   const unsigned = str.replace(/^[+-]/, '');
-  const [intPart, fracPartRaw = ''] = unsigned.split('.');
+  const [intPart = '0', fracPartRaw = ''] = unsigned.split('.');
   // Pad or truncate the fractional part to `scale` digits (round half-up).
   const fracPart = fracPartRaw.padEnd(scale + 1, '0');
   const kept = fracPart.slice(0, scale);

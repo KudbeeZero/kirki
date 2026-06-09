@@ -16,10 +16,14 @@ export class PasswordService {
     return argon2.hash(plain, this.opts);
   }
 
-  /** Constant-time verify. Returns false on any malformed-hash error. */
+  /**
+   * Constant-time verify. Returns false on any malformed-hash error.
+   * argon2.verify reads the cost parameters embedded in the stored hash, so
+   * the hashing options are intentionally not passed here.
+   */
   async verify(hash: string, plain: string): Promise<boolean> {
     try {
-      return await argon2.verify(hash, plain, this.opts);
+      return await argon2.verify(hash, plain);
     } catch {
       return false;
     }

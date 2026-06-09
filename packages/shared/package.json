@@ -4,10 +4,13 @@
   "private": true,
   "description": "Cross-cutting runtime utilities (logging, redis, errors, money, config, chain adapter contracts) shared by every Simcoin service.",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -19,6 +22,10 @@
     "@simcoin/types": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^20.16.0",
     "typescript": "^5.6.0"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
