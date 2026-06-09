@@ -50,6 +50,15 @@ export type { SegmentedControlProps, SegmentOption } from './segmented-control.j
 export { AnimatedNumber } from './animated-number.js';
 export type { AnimatedNumberProps } from './animated-number.js';
 
+export { OrderTicket } from './order-ticket.js';
+export type { OrderTicketProps } from './order-ticket.js';
+export { CelebrationOverlay } from './celebration.js';
+export type { CelebrationOverlayProps } from './celebration.js';
+export { XPBar } from './xp-bar.js';
+export type { XPBarProps } from './xp-bar.js';
+export { PullToRefresh } from './pull-to-refresh.js';
+export type { PullToRefreshProps } from './pull-to-refresh.js';
+
 // Hooks
 export { useHaptics } from './hooks/use-haptics.js';
 export { usePrev } from './hooks/use-prev.js';

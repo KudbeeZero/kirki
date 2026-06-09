@@ -16,7 +16,7 @@ These take over the loop ahead of the remaining services (user decision: UI-firs
 - [x] **(c) Primitives batch 1 (pure)** — skeleton, badge, avatar, coin-icon, mascot, sparkline, progress-bar, progress-ring, tier-badge; Button→cva.
 - [x] **(d) Client shell** — TabBar+FAB, BottomSheet, Toast, SegmentedControl, AnimatedNumber + hooks; rewire `(app)/layout.tsx` + TradeSheetProvider.
 - [x] **(e) Dashboard redesign** — greeting, odometer balance, season ring, glance cards, popular currencies w/ sparkline + price-flash.
-- [ ] **(f) Order ticket** — bottom-sheet OrderTicket; trade route → wrapper.
+- [x] **(f) Order ticket** — bottom-sheet OrderTicket; trade route → wrapper.
 - [ ] **(g) Leaderboard / Profile / Achievements** — segmented scopes, tier crest, XPBar, achievements grid.
 - [ ] **(h) Onboarding + celebrations** — carousel, CelebrationOverlay, landing/auth polish.
 - [ ] **(i) Skeletons / empty states / pull-to-refresh** — loading.tsx per route, mascot empties.
