@@ -10,6 +10,13 @@ build/
 out/
 .turbo/
 *.tsbuildinfo
+# Compiled artifacts that must never sit beside TS sources
+packages/*/src/**/*.js
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.map
+services/*/src/**/*.js
+services/*/src/**/*.d.ts
+services/*/src/**/*.map
 
 # Env & secrets
 .env
