@@ -102,14 +102,17 @@ export class MarketService {
 
   /** List the tradable markets and their static metadata. */
   listMarkets(): Market[] {
-    return SUPPORTED_SYMBOLS.map((symbol) => ({
-      id: symbol.toLowerCase(),
-      symbol,
-      name: MARKET_CATALOGUE[symbol].name,
-      quoteCcy: 'USD',
-      decimals: MARKET_CATALOGUE[symbol].decimals,
-      isActive: true,
-    }));
+    return SUPPORTED_SYMBOLS.map((symbol) => {
+      const meta = MARKET_CATALOGUE[symbol];
+      return {
+        id: symbol.toLowerCase(),
+        symbol,
+        name: meta?.name ?? symbol,
+        quoteCcy: 'USD',
+        decimals: meta?.decimals ?? 8,
+        isActive: true,
+      };
+    });
   }
 
   /**
