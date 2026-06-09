@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Simcoin">
+  <!-- Maskable: forest background fills the full canvas; coin sits in the safe zone -->
+  <rect width="512" height="512" rx="112" fill="#0f1f17"/>
+  <g transform="translate(256 256)">
+    <circle r="150" fill="#a3e635"/>
+    <circle r="150" fill="none" stroke="#16331f" stroke-width="20"/>
+    <circle r="110" fill="none" stroke="#16331f" stroke-opacity="0.45" stroke-width="10"/>
+    <circle cx="-40" cy="-14" r="17" fill="#16331f"/>
+    <circle cx="40" cy="-14" r="17" fill="#16331f"/>
+    <path d="M-42 38 Q0 78 42 38" fill="none" stroke="#16331f" stroke-width="17" stroke-linecap="round"/>
+  </g>
+</svg>

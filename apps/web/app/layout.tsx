@@ -39,6 +39,10 @@ export const metadata: Metadata = {
     title: 'Simcoin',
   },
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/icon.svg' }],
+  },
 };
 
 export const viewport: Viewport = {

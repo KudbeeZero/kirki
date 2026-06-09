@@ -1,0 +1,20 @@
+{
+  "name": "Simcoin — Duolingo for crypto trading",
+  "short_name": "Simcoin",
+  "description": "Trade simulated crypto against real, live prices. Climb the leagues, earn crests, learn the markets.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1f17",
+  "theme_color": "#0f1f17",
+  "categories": ["finance", "education", "games"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

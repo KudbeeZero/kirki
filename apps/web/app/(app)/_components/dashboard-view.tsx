@@ -12,6 +12,7 @@ import {
   CardContent,
   CoinIcon,
   ProgressRing,
+  PullToRefresh,
   Sparkline,
   TierBadge,
   motion as ui,
@@ -61,7 +62,13 @@ export function DashboardView() {
   const up = pnl >= 0;
   const profit = Number(PORTFOLIO.totalValue) - Number(PORTFOLIO.startingValue);
 
+  // TODO: re-fetch portfolio + prices via SDK once the gateway is wired.
+  const refresh = async () => {
+    await new Promise((r) => setTimeout(r, 700));
+  };
+
   return (
+    <PullToRefresh onRefresh={refresh}>
     <motion.div
       className="flex flex-col gap-5"
       variants={ui.staggerContainer(0.06)}
@@ -184,6 +191,7 @@ export function DashboardView() {
         })}
       </motion.section>
     </motion.div>
+    </PullToRefresh>
   );
 }
 

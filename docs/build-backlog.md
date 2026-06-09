@@ -19,8 +19,8 @@ These take over the loop ahead of the remaining services (user decision: UI-firs
 - [x] **(f) Order ticket** — bottom-sheet OrderTicket; trade route → wrapper.
 - [x] **(g) Leaderboard / Profile / Achievements** — segmented scopes, tier crest, XPBar, achievements grid.
 - [x] **(h) Onboarding + celebrations** — carousel, CelebrationOverlay, landing/auth polish.
-- [ ] **(i) Skeletons / empty states / pull-to-refresh** — loading.tsx per route, mascot empties.
-- [ ] **(j) App icon / splash / PWA** — manifest + maskable icons + splash.
+- [x] **(i) Skeletons / empty states / pull-to-refresh** — loading.tsx per route, mascot empties.
+- [x] **(j) App icon / splash / PWA** — manifest + maskable icons + splash.
 
 ### Backend services (resume after UI push)
 
@@ -57,3 +57,4 @@ These take over the loop ahead of the remaining services (user decision: UI-firs
 - 2026-06-09 09:28 — game-engine coverage — xp/pnl/season specs added; 40 tests green (full module coverage).
 - 2026-06-09 10:20 — market-service — typecheck clean + 6 ingestion-pipeline tests; fixed ioredis/express/pg/jest config (pattern reused for other services).
 - 2026-06-09 (blitz) — UI (b) tooling, (c) primitives, (d) client shell, (e) dashboard redesign — all green; web bundle ~158-162kB w/ framer+lucide.
+- 2026-06-09 (bulldoze) — UI (f) order ticket, (g) leaderboard/profile/achievements, (h) onboarding+landing, (i) skeletons+pull-to-refresh, (j) PWA manifest+icon — all green; 12 routes. UI push (a)-(j) COMPLETE.
