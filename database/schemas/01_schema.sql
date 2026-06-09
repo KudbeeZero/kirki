@@ -160,6 +160,7 @@ CREATE TABLE transactions (
     quantity      NUMERIC(24, 8),                      -- asset qty (null for cash-only)
     price         NUMERIC(24, 8),
     cash_delta    NUMERIC(24, 8) NOT NULL,             -- +credit / -debit to cash_balance
+    realized_pnl  NUMERIC(24, 8),                      -- set on closing (sell) fills; null otherwise
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX transactions_portfolio_idx ON transactions (portfolio_id, created_at DESC);

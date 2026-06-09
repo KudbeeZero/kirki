@@ -46,7 +46,7 @@ See **QUICKSTART.md**. TL;DR:
 
 ## Status (as of 2026-06-09)
 
-**Done + tested (84 tests green):**
+**Done + tested (90 tests green):**
 - `packages/types`, `packages/shared` (20 tests), `packages/game-engine` (40 tests) — solid.
 - `auth-service` — Argon2id, hashed refresh tokens, OWASP refresh-rotation +
   reuse detection, helmet/CORS/validation, pinned JWT alg. Builds + 9 tests.
@@ -55,11 +55,15 @@ See **QUICKSTART.md**. TL;DR:
 - `trading-service` — **order engine implemented**: atomic market fills, resting
   limit orders matched on ticks, weighted-avg cost basis, realized PnL, ledger
   writes under row locks, publishes `order.filled`/`trade.executed`. Builds + 9 tests.
+- `portfolio-service` — read model (mark-to-market, PnL%, unrealized PnL,
+  win-rate stats). Builds + 6 tests. **trading-service is the single writer**;
+  portfolio reads the shared tables (no double-settle). `realized_pnl` is
+  persisted on sell fills.
 - `apps/web` — 12 routes, themed (forest/lime/gold), animated, PWA, **mock data**.
 
-**Scaffolded but NOT yet hardened/tested:** `portfolio`, `league`, `social`,
-`nft`, `education`, `notification` services. They need the per-service fix
-pattern (below) + real implementations + tests.
+**Scaffolded but NOT yet hardened/tested:** `league`, `social`, `nft`,
+`education`, `notification` services. They need the per-service fix pattern
+(below) + real implementations + tests.
 
 **Not started:** API gateway/BFF, web↔backend live wiring, seed demo user,
 full `pnpm build`/`typecheck`/CI green.

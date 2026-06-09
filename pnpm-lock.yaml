@@ -757,6 +757,9 @@ importers:
       '@types/node':
         specifier: ^20.16.0
         version: 20.19.42
+      '@types/pg':
+        specifier: ^8.11.0
+        version: 8.20.0
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.42)

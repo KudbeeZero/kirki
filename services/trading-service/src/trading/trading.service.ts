@@ -321,8 +321,9 @@ export class TradingService implements OnModuleInit {
     );
 
     await client.query(
-      `INSERT INTO transactions (portfolio_id, order_id, symbol, type, quantity, price, cash_delta)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      `INSERT INTO transactions
+         (portfolio_id, order_id, symbol, type, quantity, price, cash_delta, realized_pnl)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         portfolioId,
         orderId,
@@ -331,6 +332,7 @@ export class TradingService implements OnModuleInit {
         quantity,
         price,
         cashDelta,
+        realizedPnl, // null for buys; (exit - basis) * qty for sells
       ],
     );
 

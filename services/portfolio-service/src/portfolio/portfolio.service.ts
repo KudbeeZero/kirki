@@ -1,6 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { decimal } from '@simcoin/shared';
-import { REDIS_CHANNELS } from '@simcoin/types';
 import type {
   Portfolio,
   Position,
@@ -8,43 +7,30 @@ import type {
   Transaction,
   UUID,
 } from '@simcoin/types';
-import type { TradeExecutedEvent } from '@simcoin/types';
 import { DatabaseService } from '../database/database.service.js';
 import { RedisService } from '../redis/redis.service.js';
 
 /**
- * Portfolio domain service.
+ * Portfolio read model.
  *
- * Owns the read model for a user's portfolio: cash, positions, and the derived
- * mark-to-market figures (total value, PnL, win rate). It is the consumer side
- * of the trading flow — it subscribes to `trade.executed` events on Redis and
- * folds each fill into positions and transactions. The trading-service remains
- * the system of record for orders; this service materialises holdings.
+ * Exposes a user's portfolio: cash, positions, and the derived mark-to-market
+ * figures (total value, PnL, win rate). It reads the same Postgres tables that
+ * the **trading-service** writes — the trading engine is the single writer and
+ * settles each fill (cash + position + ledger row) atomically under row locks,
+ * so this service never mutates balances. That keeps cash and holdings from
+ * ever drifting apart, and makes this service a pure, side-effect-free view.
+ *
+ * Latest prices for mark-to-market come from the market-service Redis cache.
  */
 @Injectable()
-export class PortfolioService implements OnModuleInit {
-  private readonly logger = new Logger(PortfolioService.name);
-
+export class PortfolioService {
   constructor(
     private readonly db: DatabaseService,
     private readonly redis: RedisService,
   ) {}
 
-  /** Subscribe to the trade stream so fills update holdings in near-real-time. */
-  async onModuleInit(): Promise<void> {
-    await this.redis.subscribe<{ type: string; payload: TradeExecutedEvent }>(
-      REDIS_CHANNELS.trades,
-      (evt) => {
-        if (evt.type !== 'trade.executed') return;
-        void this.applyTrade(evt.payload).catch((err) =>
-          this.logger.warn(`Failed to apply trade: ${(err as Error).message}`),
-        );
-      },
-    );
-  }
-
   /**
-   * Load a user's portfolio with totals marked to the latest prices.
+   * Load a user's active-season portfolio with totals marked to latest prices.
    * @param userId Authenticated caller's id.
    */
   async getPortfolio(userId: UUID): Promise<Portfolio> {
@@ -58,8 +44,7 @@ export class PortfolioService implements OnModuleInit {
     );
     const base = rows[0];
     if (!base) {
-      // TODO(phase-1): auto-provision a portfolio on first login via auth events.
-      throw new Error(`No active portfolio for user '${userId}'`);
+      throw new NotFoundException(`No active portfolio for user '${userId}'`);
     }
     const positions = await this.getPositions(userId);
     return this.markToMarket(base, positions);
@@ -106,21 +91,25 @@ export class PortfolioService implements OnModuleInit {
 
   /**
    * Aggregate trading performance for a user: trade count, win rate, best and
-   * worst trade, and realised PnL. Derived from the transactions ledger.
+   * worst trade, and realised PnL — derived from the transactions ledger.
+   * `realized_pnl` is set only on closing (sell) fills, so the win rate is
+   * measured over closed trades, not buys.
    */
   async getStats(userId: UUID): Promise<PortfolioStats> {
     const { rows } = await this.db.query<{
       totalTrades: string;
+      realizedCount: string;
       wins: string;
       bestTrade: string | null;
       worstTrade: string | null;
       realizedPnl: string | null;
     }>(
-      `SELECT COUNT(*)                              AS "totalTrades",
-              COUNT(*) FILTER (WHERE realized_pnl > 0) AS "wins",
-              MAX(realized_pnl)                     AS "bestTrade",
-              MIN(realized_pnl)                     AS "worstTrade",
-              COALESCE(SUM(realized_pnl), 0)        AS "realizedPnl"
+      `SELECT COUNT(*)                                      AS "totalTrades",
+              COUNT(*) FILTER (WHERE realized_pnl IS NOT NULL) AS "realizedCount",
+              COUNT(*) FILTER (WHERE realized_pnl > 0)      AS "wins",
+              MAX(realized_pnl)                             AS "bestTrade",
+              MIN(realized_pnl)                             AS "worstTrade",
+              COALESCE(SUM(realized_pnl), 0)                AS "realizedPnl"
          FROM transactions t
          JOIN portfolios pf ON pf.id = t.portfolio_id
         WHERE pf.user_id = $1 AND t.type IN ('trade_buy', 'trade_sell')`,
@@ -128,10 +117,11 @@ export class PortfolioService implements OnModuleInit {
     );
     const r = rows[0];
     const total = Number(r?.totalTrades ?? 0);
+    const realized = Number(r?.realizedCount ?? 0);
     const wins = Number(r?.wins ?? 0);
     return {
       totalTrades: total,
-      winRate: total === 0 ? decimal.ZERO : decimal.div(String(wins), String(total)),
+      winRate: realized === 0 ? decimal.ZERO : decimal.div(String(wins), String(realized)),
       bestTrade: r?.bestTrade ?? decimal.ZERO,
       worstTrade: r?.worstTrade ?? decimal.ZERO,
       realizedPnl: r?.realizedPnl ?? decimal.ZERO,
@@ -154,20 +144,6 @@ export class PortfolioService implements OnModuleInit {
     return rows;
   }
 
-  /**
-   * Fold an executed trade into the portfolio: adjust cash and the position's
-   * quantity / average entry, then append a transaction. Runs in a single
-   * transaction so cash and holdings can never drift apart.
-   */
-  private async applyTrade(evt: TradeExecutedEvent): Promise<void> {
-    // TODO(phase-1): implement position averaging + cash settlement here.
-    // The shape is fixed; the body is intentionally deferred until the trading
-    // engine's fill contract is locked. Throwing keeps a partial write from
-    // silently corrupting balances.
-    this.logger.debug(`trade.executed for portfolio ${evt.portfolioId} (${evt.symbol})`);
-    throw new Error('NotImplemented: applyTrade — pending trading engine fill contract');
-  }
-
   /** Compute mark-to-market totals from a base portfolio row and positions. */
   private markToMarket(
     base: Pick<
@@ -182,10 +158,9 @@ export class PortfolioService implements OnModuleInit {
     );
     const totalValue = decimal.add(base.cashBalance, holdingsValue);
     // pnlPct = (totalValue - startingValue) / startingValue
-    const pnlPct =
-      base.startingValue === decimal.ZERO
-        ? decimal.ZERO
-        : decimal.div(decimal.sub(totalValue, base.startingValue), base.startingValue);
+    const pnlPct = decimal.isZero(base.startingValue)
+      ? decimal.ZERO
+      : decimal.div(decimal.sub(totalValue, base.startingValue), base.startingValue);
     return { ...base, totalValue, pnlPct };
   }
 
