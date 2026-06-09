@@ -74,7 +74,9 @@ export function DashboardView() {
           <p className="text-sm text-muted-foreground">{greeting()},</p>
           <h1 className="font-display text-2xl font-extrabold">Alex :)</h1>
         </div>
-        <TierBadge tier="gold" division={2} size="lg" />
+        <Link href="/profile" aria-label="Your profile">
+          <TierBadge tier="gold" division={2} size="lg" />
+        </Link>
       </motion.header>
 
       {/* Hero balance */}
