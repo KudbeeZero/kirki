@@ -81,14 +81,14 @@ CREATE TABLE markets (
 -- Time-series of real, live prices ingested by market-service.
 -- Hot reads are served from Redis; this table is the durable record / for charts.
 CREATE TABLE market_data (
-    market_id   UUID NOT NULL REFERENCES markets(id) ON DELETE CASCADE,
+    symbol      TEXT NOT NULL REFERENCES markets(symbol) ON DELETE CASCADE,
     ts          TIMESTAMPTZ NOT NULL,
     price       NUMERIC(24, 8) NOT NULL,
     volume_24h  NUMERIC(24, 4),
     change_24h  NUMERIC(10, 4),                        -- percent
-    PRIMARY KEY (market_id, ts)
+    PRIMARY KEY (symbol, ts)
 );
-CREATE INDEX market_data_recent_idx ON market_data (market_id, ts DESC);
+CREATE INDEX market_data_recent_idx ON market_data (symbol, ts DESC);
 
 -- ════════════════════════════════════════════════════════════════════════
 -- Portfolios, positions, orders, transactions                         [P1]
@@ -109,17 +109,17 @@ CREATE TABLE portfolios (
 CREATE TABLE positions (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     portfolio_id  UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
-    market_id     UUID NOT NULL REFERENCES markets(id),
+    symbol        TEXT NOT NULL REFERENCES markets(symbol),
     quantity      NUMERIC(24, 8) NOT NULL DEFAULT 0,
     avg_entry     NUMERIC(24, 8) NOT NULL DEFAULT 0,   -- cost basis
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (portfolio_id, market_id)
+    UNIQUE (portfolio_id, symbol)
 );
 
 CREATE TABLE orders (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     portfolio_id  UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
-    market_id     UUID NOT NULL REFERENCES markets(id),
+    symbol        TEXT NOT NULL REFERENCES markets(symbol),
     side          order_side  NOT NULL,
     type          order_type  NOT NULL,
     status        order_status NOT NULL DEFAULT 'open',
@@ -130,7 +130,7 @@ CREATE TABLE orders (
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX orders_open_limit_idx ON orders (market_id, status) WHERE status = 'open';
+CREATE INDEX orders_open_limit_idx ON orders (symbol, status) WHERE status = 'open';
 CREATE INDEX orders_portfolio_idx  ON orders (portfolio_id, created_at DESC);
 
 -- Immutable ledger. Every cash/asset movement is recorded here.
@@ -138,7 +138,7 @@ CREATE TABLE transactions (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     portfolio_id  UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
     order_id      UUID REFERENCES orders(id),
-    market_id     UUID REFERENCES markets(id),
+    symbol        TEXT REFERENCES markets(symbol),
     type          txn_type NOT NULL,
     quantity      NUMERIC(24, 8),                      -- asset qty (null for cash-only)
     price         NUMERIC(24, 8),

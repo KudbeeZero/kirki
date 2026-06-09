@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 
 /**
  * Redis access for caching and pub/sub.
@@ -38,7 +38,7 @@ export class RedisService implements OnModuleDestroy {
   /** Subscribe to a channel and invoke `handler` with each parsed message. */
   async subscribe<T>(channel: string, handler: (payload: T) => void): Promise<void> {
     await this.subscriber.subscribe(channel);
-    this.subscriber.on('message', (ch, message) => {
+    this.subscriber.on('message', (ch: string, message: string) => {
       if (ch !== channel) return;
       handler(JSON.parse(message) as T);
     });

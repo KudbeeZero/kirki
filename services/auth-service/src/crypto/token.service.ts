@@ -35,7 +35,12 @@ export class TokenService {
   }
 
   async verifyAccessToken(token: string): Promise<AccessTokenClaims> {
-    return this.jwt.verifyAsync<AccessTokenClaims>(token);
+    // Pin the accepted algorithm. Without this, a verifier that also knows an
+    // asymmetric public key can be tricked into accepting an HS256 token signed
+    // with that public key (alg-confusion). Critical once we move to RS256.
+    return this.jwt.verifyAsync<AccessTokenClaims>(token, {
+      algorithms: [securityConfig.accessToken.algorithm],
+    });
   }
 
   /** Generate an opaque refresh token and its storable hash. */

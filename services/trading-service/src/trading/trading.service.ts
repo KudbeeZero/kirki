@@ -5,16 +5,24 @@ import {
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
+import type { PoolClient } from 'pg';
 import { decimal } from '@simcoin/shared';
 import { REDIS_CHANNELS } from '@simcoin/types';
 import type {
   Order,
+  OrderSide,
   PlaceOrderRequest,
   PriceTickEvent,
   UUID,
 } from '@simcoin/types';
 import { DatabaseService } from '../database/database.service.js';
 import { RedisService } from '../redis/redis.service.js';
+
+/** Columns selected to hydrate an {@link Order} domain object. */
+const ORDER_COLUMNS = `id, portfolio_id AS "portfolioId", symbol, side, type, status,
+        quantity, limit_price AS "limitPrice", filled_qty AS "filledQty",
+        avg_fill_price AS "avgFillPrice",
+        created_at AS "createdAt", updated_at AS "updatedAt"`;
 
 /**
  * Paper-trading order engine.
@@ -67,17 +75,23 @@ export class TradingService implements OnModuleInit {
         : this.requireLimitPrice(req);
     const quantity = this.resolveQuantity(req, price);
 
+    if (decimal.lte(quantity, decimal.ZERO)) {
+      throw new BadRequestException('Order quantity must be positive.');
+    }
+
+    // Fast-fail affordability check for nicer UX; the authoritative check runs
+    // again under row locks inside the settlement transaction.
     await this.validateAffordability(portfolioId, req.symbol, req.side, quantity, price);
 
     if (req.type === 'market') {
-      return this.fillImmediately(portfolioId, req, quantity, price);
+      return this.fillImmediately(userId, portfolioId, req, quantity, price);
     }
     return this.restLimitOrder(portfolioId, req, quantity);
   }
 
   /**
-   * Cancel an open order owned by the caller. Idempotent for already-terminal
-   * orders is *not* assumed — cancelling a filled order is a 400.
+   * Cancel an open order owned by the caller. Cancelling a non-open order
+   * (already filled/cancelled) is a 404 — we never silently no-op a fill.
    */
   async cancelOrder(userId: UUID, orderId: UUID): Promise<{ id: UUID; status: 'cancelled' }> {
     const portfolioId = await this.portfolioFor(userId);
@@ -102,11 +116,7 @@ export class TradingService implements OnModuleInit {
       where += ` AND status = $2`;
     }
     const { rows } = await this.db.query<Order>(
-      `SELECT id, portfolio_id AS "portfolioId", symbol, side, type, status,
-              quantity, limit_price AS "limitPrice", filled_qty AS "filledQty",
-              avg_fill_price AS "avgFillPrice",
-              created_at AS "createdAt", updated_at AS "updatedAt"
-         FROM orders WHERE ${where} ORDER BY created_at DESC`,
+      `SELECT ${ORDER_COLUMNS} FROM orders WHERE ${where} ORDER BY created_at DESC`,
       params,
     );
     return rows;
@@ -116,23 +126,39 @@ export class TradingService implements OnModuleInit {
 
   /**
    * Fill a market order atomically: write the order (filled), the transaction,
-   * adjust cash, then publish the fill + trade events. Wrapped in a DB tx so a
-   * crash can never leave a fill without its cash movement.
+   * adjust cash and the position, then publish the fill + trade events. Wrapped
+   * in a DB tx so a crash can never leave a fill without its cash movement.
    */
   private async fillImmediately(
+    userId: UUID,
     portfolioId: UUID,
     req: PlaceOrderRequest,
     quantity: string,
     price: string,
   ): Promise<Order> {
-    // TODO(phase-1): implement the transactional write + event publish.
-    // The validation, pricing, and quantity resolution above are real; the
-    // persistence/settlement body is deferred until the orders/transactions
-    // migration lands. Throwing prevents acknowledging an unsettled fill.
-    this.logger.debug(
-      `market fill ${req.side} ${quantity} ${req.symbol} @ ${price} (portfolio ${portfolioId})`,
-    );
-    throw new Error('NotImplemented: fillImmediately — pending orders/transactions schema');
+    const { order, realizedPnl, tradeCount } = await this.db.tx(async (client) => {
+      const { rows } = await client.query<Order>(
+        `INSERT INTO orders
+           (portfolio_id, symbol, side, type, status, quantity, limit_price,
+            filled_qty, avg_fill_price)
+         VALUES ($1, $2, $3, 'market', 'filled', $4, NULL, $4, $5)
+         RETURNING ${ORDER_COLUMNS}`,
+        [portfolioId, req.symbol, req.side, quantity, price],
+      );
+      const filled = rows[0]!;
+      const settlement = await this.settle(client, {
+        portfolioId,
+        orderId: filled.id,
+        symbol: req.symbol,
+        side: req.side,
+        quantity,
+        price,
+      });
+      return { order: filled, ...settlement };
+    });
+
+    await this.publishFill(userId, order, price, realizedPnl, tradeCount);
+    return order;
   }
 
   /** Persist a limit order in the `open` state to be matched against ticks. */
@@ -145,10 +171,7 @@ export class TradingService implements OnModuleInit {
       `INSERT INTO orders
          (portfolio_id, symbol, side, type, status, quantity, limit_price, filled_qty)
        VALUES ($1, $2, $3, 'limit', 'open', $4, $5, '0')
-       RETURNING id, portfolio_id AS "portfolioId", symbol, side, type, status,
-                 quantity, limit_price AS "limitPrice", filled_qty AS "filledQty",
-                 avg_fill_price AS "avgFillPrice",
-                 created_at AS "createdAt", updated_at AS "updatedAt"`,
+       RETURNING ${ORDER_COLUMNS}`,
       [portfolioId, req.symbol, req.side, quantity, req.limitPrice],
     );
     return rows[0]!;
@@ -156,13 +179,192 @@ export class TradingService implements OnModuleInit {
 
   /**
    * On each tick, fill any resting limit orders the price now satisfies:
-   * buys at price <= limit, sells at price >= limit.
+   * buys at price <= limit, sells at price >= limit. Each order settles in its
+   * own transaction so one bad fill cannot roll back the rest of the batch.
    */
   private async matchLimitOrders(tick: PriceTickEvent): Promise<void> {
-    // TODO(phase-1): SELECT open limit orders for tick.symbol whose limit is
-    // crossed by tick.price, then route each through the same settlement path
-    // as fillImmediately. Deferred with the persistence layer.
-    this.logger.debug(`tick ${tick.symbol} @ ${tick.price} — limit scan pending`);
+    const symbol = tick.symbol.toUpperCase();
+    const { rows: open } = await this.db.query<{
+      id: UUID;
+      portfolioId: UUID;
+      userId: UUID;
+      side: OrderSide;
+      quantity: string;
+    }>(
+      `SELECT o.id, o.portfolio_id AS "portfolioId", p.user_id AS "userId",
+              o.side, o.quantity
+         FROM orders o
+         JOIN portfolios p ON p.id = o.portfolio_id
+        WHERE o.symbol = $1 AND o.status = 'open' AND o.type = 'limit'
+          AND ( (o.side = 'buy'  AND o.limit_price >= $2)
+             OR (o.side = 'sell' AND o.limit_price <= $2) )`,
+      [symbol, tick.price],
+    );
+
+    for (const o of open) {
+      try {
+        const result = await this.db.tx(async (client) => {
+          // Re-assert the order is still open under a row lock (another tick or
+          // a cancel may have raced us) before committing the fill.
+          const { rowCount } = await client.query(
+            `UPDATE orders
+                SET status = 'filled', filled_qty = quantity,
+                    avg_fill_price = $2, updated_at = now()
+              WHERE id = $1 AND status = 'open'`,
+            [o.id, tick.price],
+          );
+          if (rowCount === 0) return null; // already terminal — skip
+          return this.settle(client, {
+            portfolioId: o.portfolioId,
+            orderId: o.id,
+            symbol,
+            side: o.side,
+            quantity: o.quantity,
+            price: tick.price,
+          });
+        });
+        if (!result) continue;
+        const { rows } = await this.db.query<Order>(
+          `SELECT ${ORDER_COLUMNS} FROM orders WHERE id = $1`,
+          [o.id],
+        );
+        await this.publishFill(
+          o.userId,
+          rows[0]!,
+          tick.price,
+          result.realizedPnl,
+          result.tradeCount,
+        );
+      } catch (err) {
+        // A resting order that can no longer settle (e.g. the holdings were
+        // sold elsewhere) is rejected so it stops matching on every tick.
+        await this.db.query(
+          `UPDATE orders SET status = 'rejected', updated_at = now()
+            WHERE id = $1 AND status = 'open'`,
+          [o.id],
+        );
+        this.logger.warn(`Rejected limit order ${o.id}: ${(err as Error).message}`);
+      }
+    }
+  }
+
+  /**
+   * Move cash, update the position cost-basis, and write the immutable ledger
+   * row for a single fill. MUST run inside a transaction; rows are locked
+   * `FOR UPDATE` so concurrent fills on the same portfolio serialise correctly.
+   * @returns realized PnL (sells only) and the portfolio's lifetime trade count.
+   */
+  private async settle(
+    client: PoolClient,
+    fill: {
+      portfolioId: UUID;
+      orderId: UUID;
+      symbol: string;
+      side: OrderSide;
+      quantity: string;
+      price: string;
+    },
+  ): Promise<{ realizedPnl: string | null; tradeCount: number }> {
+    const { portfolioId, orderId, symbol, side, quantity, price } = fill;
+    const notional = decimal.mul(quantity, price);
+
+    // Lock the portfolio's cash, then the position (consistent lock order).
+    const { rows: pRows } = await client.query<{ cashBalance: string }>(
+      `SELECT cash_balance AS "cashBalance" FROM portfolios WHERE id = $1 FOR UPDATE`,
+      [portfolioId],
+    );
+    const cash = pRows[0]?.cashBalance ?? decimal.ZERO;
+
+    const { rows: posRows } = await client.query<{ quantity: string; avgEntry: string }>(
+      `SELECT quantity, avg_entry AS "avgEntry"
+         FROM positions WHERE portfolio_id = $1 AND symbol = $2 FOR UPDATE`,
+      [portfolioId, symbol],
+    );
+    const heldQty = posRows[0]?.quantity ?? decimal.ZERO;
+    const avgEntry = posRows[0]?.avgEntry ?? decimal.ZERO;
+
+    let cashDelta: string;
+    let newQty: string;
+    let newAvg: string;
+    let realizedPnl: string | null = null;
+
+    if (side === 'buy') {
+      if (decimal.gt(notional, cash)) {
+        throw new BadRequestException('Insufficient cash for this order.');
+      }
+      cashDelta = decimal.neg(notional);
+      newQty = decimal.add(heldQty, quantity);
+      // Weighted-average cost basis across the existing and new lots.
+      newAvg = decimal.div(decimal.add(decimal.mul(heldQty, avgEntry), notional), newQty);
+    } else {
+      if (decimal.gt(quantity, heldQty)) {
+        throw new BadRequestException('Insufficient holdings for this order.');
+      }
+      cashDelta = notional;
+      newQty = decimal.sub(heldQty, quantity);
+      newAvg = decimal.isZero(newQty) ? decimal.ZERO : avgEntry;
+      // Realised PnL on the sold lot = (exit - cost basis) * quantity.
+      realizedPnl = decimal.mul(decimal.sub(price, avgEntry), quantity);
+    }
+
+    await client.query(
+      `UPDATE portfolios SET cash_balance = cash_balance + $2 WHERE id = $1`,
+      [portfolioId, cashDelta],
+    );
+
+    await client.query(
+      `INSERT INTO positions (portfolio_id, symbol, quantity, avg_entry)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (portfolio_id, symbol)
+       DO UPDATE SET quantity = $3, avg_entry = $4, updated_at = now()`,
+      [portfolioId, symbol, newQty, newAvg],
+    );
+
+    await client.query(
+      `INSERT INTO transactions (portfolio_id, order_id, symbol, type, quantity, price, cash_delta)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        portfolioId,
+        orderId,
+        symbol,
+        side === 'buy' ? 'trade_buy' : 'trade_sell',
+        quantity,
+        price,
+        cashDelta,
+      ],
+    );
+
+    const { rows: countRows } = await client.query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM transactions
+        WHERE portfolio_id = $1 AND type IN ('trade_buy', 'trade_sell')`,
+      [portfolioId],
+    );
+    return { realizedPnl, tradeCount: Number(countRows[0]?.count ?? '0') };
+  }
+
+  /** Emit `order.filled` and the richer `trade.executed` event for a fill. */
+  private async publishFill(
+    userId: UUID,
+    order: Order,
+    price: string,
+    realizedPnl: string | null,
+    tradeCount: number,
+  ): Promise<void> {
+    const base = {
+      orderId: order.id,
+      portfolioId: order.portfolioId,
+      userId,
+      symbol: order.symbol,
+      side: order.side,
+      quantity: order.quantity,
+      price,
+      at: new Date().toISOString(),
+    };
+    await this.redis.publish(REDIS_CHANNELS.trades, { type: 'order.filled', payload: base });
+    await this.redis.publish(REDIS_CHANNELS.trades, {
+      type: 'trade.executed',
+      payload: { ...base, realizedPnl, tradeCount },
+    });
   }
 
   // ── Validation & pricing ────────────────────────────────────────────────────

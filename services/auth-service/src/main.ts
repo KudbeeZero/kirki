@@ -1,12 +1,13 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AuthModule } from './auth/auth.module.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AuthModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AuthModule, { bufferLogs: true });
 
   // ── Hardened HTTP defaults ────────────────────────────────────────────────
   app.use(helmet()); // sane security headers (CSP, HSTS, noSniff, frameguard…)

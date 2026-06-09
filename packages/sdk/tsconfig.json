@@ -2,7 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    // The SDK is an isomorphic HTTP client (web, mobile/RN, Node 18+). It relies
+    // on the standard fetch/Response/AbortSignal/URLSearchParams globals, which
+    // live in the DOM lib — the Node-only base config omits them.
+    "lib": ["ES2022", "DOM"]
   },
   "include": ["src"]
 }
