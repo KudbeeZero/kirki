@@ -18,7 +18,7 @@ These take over the loop ahead of the remaining services (user decision: UI-firs
 - [x] **(e) Dashboard redesign** — greeting, odometer balance, season ring, glance cards, popular currencies w/ sparkline + price-flash.
 - [x] **(f) Order ticket** — bottom-sheet OrderTicket; trade route → wrapper.
 - [x] **(g) Leaderboard / Profile / Achievements** — segmented scopes, tier crest, XPBar, achievements grid.
-- [ ] **(h) Onboarding + celebrations** — carousel, CelebrationOverlay, landing/auth polish.
+- [x] **(h) Onboarding + celebrations** — carousel, CelebrationOverlay, landing/auth polish.
 - [ ] **(i) Skeletons / empty states / pull-to-refresh** — loading.tsx per route, mascot empties.
 - [ ] **(j) App icon / splash / PWA** — manifest + maskable icons + splash.
 

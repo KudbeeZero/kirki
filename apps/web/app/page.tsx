@@ -1,27 +1,21 @@
 import Link from 'next/link';
-import { cn, Card, CardContent, CardHeader, CardTitle } from '@simcoin/ui';
+import { cn, Card, CardContent, CardHeader, CardTitle, Mascot, Badge } from '@simcoin/ui';
 
-/**
- * Button-styled link. The shared `Button` renders a `<button>`; for navigation
- * we reuse its token classes on a Next `<Link>` instead.
- */
-function buttonLinkClass(variant: 'primary' | 'outline' = 'primary'): string {
+/** Button-styled link (the shared Button renders a <button>; links reuse tokens). */
+function buttonLinkClass(variant: 'white' | 'outline' = 'white'): string {
   return cn(
-    'inline-flex h-11 items-center justify-center gap-2 rounded-md px-5 text-sm font-semibold transition-colors',
+    'inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold transition-transform active:scale-[0.97]',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-    variant === 'primary'
-      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+    variant === 'white'
+      ? 'bg-foreground text-background hover:bg-foreground/90 shadow-fab'
       : 'border border-border bg-transparent hover:bg-secondary/60',
   );
 }
 
-/**
- * Marketing landing page (public). Server component — no client interactivity
- * beyond navigation links.
- */
+/** Marketing landing page (public, server-rendered). */
 export default function LandingPage() {
   return (
-    <main className="mx-auto flex w-full max-w-screen-sm flex-col gap-12 px-4 py-12 sm:max-w-screen-md">
+    <main className="mx-auto flex w-full max-w-screen-sm flex-col gap-12 px-5 py-12 sm:max-w-screen-md">
       <Hero />
       <FeatureGrid />
       <CallToAction />
@@ -31,21 +25,24 @@ export default function LandingPage() {
 
 function Hero() {
   return (
-    <section className="flex flex-col items-center gap-6 text-center">
-      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+    <section className="flex flex-col items-center gap-6 pt-6 text-center">
+      <Mascot mood="happy" size={120} className="drop-shadow-[0_10px_30px_hsl(96_78%_40%/0.35)]" />
+      <Badge variant="lime" size="md">
         Real prices · Simulated stakes · Zero risk
-      </span>
-      <h1 className="text-balance text-4xl font-extrabold leading-tight sm:text-5xl">
-        Duolingo for crypto trading
+      </Badge>
+      <h1 className="text-balance font-display text-4xl font-extrabold leading-tight sm:text-5xl">
+        World&apos;s most fun way to{' '}
+        <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          learn crypto trading
+        </span>
       </h1>
       <p className="max-w-prose text-pretty text-muted-foreground">
-        Learn how markets really work by trading simulated assets against real, live
-        prices. Climb competitive leagues, master the charts, and earn achievements —
-        without ever risking a cent.
+        Trade simulated assets against real, live prices. Climb competitive leagues, master
+        the charts, and earn achievements — without ever risking a cent.
       </p>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Link href="/register" className={cn(buttonLinkClass('primary'), 'w-full sm:w-auto')}>
-          Start playing free
+      <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+        <Link href="/onboarding" className={cn(buttonLinkClass('white'), 'w-full sm:w-auto')}>
+          Get Started
         </Link>
         <Link href="/login" className={cn(buttonLinkClass('outline'), 'w-full sm:w-auto')}>
           Log in
@@ -55,23 +52,11 @@ function Hero() {
   );
 }
 
-const FEATURES: Array<{ title: string; body: string }> = [
-  {
-    title: 'Live market engine',
-    body: 'Prices stream from real exchanges. What you see is what the world sees — only the money is fake.',
-  },
-  {
-    title: 'Paper trading',
-    body: 'Place market and limit orders, build positions, and track mark-to-market PnL on every trade.',
-  },
-  {
-    title: 'Competitive leagues',
-    body: 'Climb from Bronze to Master across 30-day seasons. Top performers promote; the bottom relegate.',
-  },
-  {
-    title: 'Learn by doing',
-    body: 'Bite-sized lessons unlock XP and badges as you put each concept to work in the simulator.',
-  },
+const FEATURES = [
+  { emoji: '📈', title: 'Live market engine', body: 'Prices stream from real exchanges. What you see is what the world sees — only the money is fake.' },
+  { emoji: '🎮', title: 'Paper trading', body: 'Place market and limit orders, build positions, and track mark-to-market PnL on every trade.' },
+  { emoji: '🏆', title: 'Competitive leagues', body: 'Climb from Bronze to Master across 30-day seasons. Top performers promote; the bottom relegate.' },
+  { emoji: '🎓', title: 'Learn by doing', body: 'Bite-sized lessons unlock XP and badges as you put each concept to work in the simulator.' },
 ];
 
 function FeatureGrid() {
@@ -80,7 +65,10 @@ function FeatureGrid() {
       {FEATURES.map((f) => (
         <Card key={f.title}>
           <CardHeader>
-            <CardTitle>{f.title}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <span aria-hidden="true">{f.emoji}</span>
+              {f.title}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">{f.body}</CardContent>
         </Card>
@@ -91,14 +79,13 @@ function FeatureGrid() {
 
 function CallToAction() {
   return (
-    <section className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card p-8 text-center">
-      <h2 className="text-2xl font-bold">Ready to trade your way to the top?</h2>
+    <section className="flex flex-col items-center gap-4 rounded-2xl border border-primary/20 bg-gradient-to-br from-card to-background-elevated p-8 text-center shadow-card">
+      <h2 className="font-display text-2xl font-extrabold">Ready to trade your way to the top?</h2>
       <p className="max-w-prose text-sm text-muted-foreground">
-        Create a free account, get your starting balance, and place your first trade in
-        under a minute.
+        Create a free account, get your starting balance, and place your first trade in under a minute.
       </p>
-      <Link href="/login" className={buttonLinkClass('primary')}>
-        Get started
+      <Link href="/onboarding" className={buttonLinkClass('white')}>
+        Get Started
       </Link>
     </section>
   );
