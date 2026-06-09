@@ -15,7 +15,7 @@ These take over the loop ahead of the remaining services (user decision: UI-firs
 - [x] **(b) Tooling** — `cn()`→clsx+tailwind-merge, add cva (ui deps) + framer-motion + lucide-react (ui peers, web deps); `packages/ui/src/motion.ts`.
 - [x] **(c) Primitives batch 1 (pure)** — skeleton, badge, avatar, coin-icon, mascot, sparkline, progress-bar, progress-ring, tier-badge; Button→cva.
 - [x] **(d) Client shell** — TabBar+FAB, BottomSheet, Toast, SegmentedControl, AnimatedNumber + hooks; rewire `(app)/layout.tsx` + TradeSheetProvider.
-- [ ] **(e) Dashboard redesign** — greeting, odometer balance, season ring, glance cards, popular currencies w/ sparkline + price-flash.
+- [x] **(e) Dashboard redesign** — greeting, odometer balance, season ring, glance cards, popular currencies w/ sparkline + price-flash.
 - [ ] **(f) Order ticket** — bottom-sheet OrderTicket; trade route → wrapper.
 - [ ] **(g) Leaderboard / Profile / Achievements** — segmented scopes, tier crest, XPBar, achievements grid.
 - [ ] **(h) Onboarding + celebrations** — carousel, CelebrationOverlay, landing/auth polish.
@@ -56,3 +56,4 @@ These take over the loop ahead of the remaining services (user decision: UI-firs
 - 2026-06-09 08:36 — packages/shared tests — decimal + redis facade, 20 tests green; build clean.
 - 2026-06-09 09:28 — game-engine coverage — xp/pnl/season specs added; 40 tests green (full module coverage).
 - 2026-06-09 10:20 — market-service — typecheck clean + 6 ingestion-pipeline tests; fixed ioredis/express/pg/jest config (pattern reused for other services).
+- 2026-06-09 (blitz) — UI (b) tooling, (c) primitives, (d) client shell, (e) dashboard redesign — all green; web bundle ~158-162kB w/ framer+lucide.
