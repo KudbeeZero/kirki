@@ -1,7 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2022"
+    ],
     "jsx": "preserve",
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -12,13 +16,26 @@
     "declaration": false,
     "declarationMap": false,
     "sourceMap": false,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./*"],
-      "@simcoin/types": ["../../packages/types/src/index.ts"],
-      "@simcoin/sdk": ["../../packages/sdk/src/index.ts"],
-      "@simcoin/ui": ["../../packages/ui/src/index.ts"]
-    }
+      "@/*": [
+        "./*"
+      ],
+      "@simcoin/types": [
+        "../../packages/types/src/index.ts"
+      ],
+      "@simcoin/sdk": [
+        "../../packages/sdk/src/index.ts"
+      ],
+      "@simcoin/ui": [
+        "../../packages/ui/src/index.ts"
+      ]
+    },
+    "isolatedModules": true
   },
   "include": [
     "next-env.d.ts",
@@ -26,5 +43,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next"]
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
 }

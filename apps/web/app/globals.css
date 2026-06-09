@@ -3,63 +3,96 @@
 @tailwind utilities;
 
 /*
- * ShadCN-style design tokens, expressed as HSL channels so Tailwind can apply
- * opacity modifiers (e.g. `bg-primary/50`). The dark theme is the default for
- * a trading product; `.light` opts back into a bright palette.
+ * Simcoin design tokens — "playful & rounded" forest-green / lime / gold brand.
+ * Expressed as HSL channels so Tailwind can apply opacity modifiers
+ * (e.g. `bg-primary/50`). Dark (forest) is the default for a trading game;
+ * `.light` opts back into a bright palette. Motion tokens live here too so
+ * every animated component shares one timing language.
  */
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    /* Surfaces — deep forest green-black, gently lifted cards. */
+    --background: 155 30% 7%;
+    --background-elevated: 155 28% 10%;
+    --foreground: 150 20% 96%;
 
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
+    --card: 156 26% 11%;
+    --card-foreground: 150 20% 96%;
 
-    --primary: 152 76% 44%; /* Simcoin green */
-    --primary-foreground: 222 47% 6%;
+    --popover: 156 28% 9%;
+    --popover-foreground: 150 20% 96%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    /* Lime/mint — the brand accent (matches the mockup headline + CTAs). */
+    --primary: 96 78% 56%;
+    --primary-foreground: 155 40% 8%;
 
-    --muted: 217 33% 14%;
-    --muted-foreground: 215 20% 65%;
+    --secondary: 156 18% 18%;
+    --secondary-foreground: 150 18% 92%;
 
-    --accent: 263 70% 60%;
-    --accent-foreground: 210 40% 98%;
+    --muted: 156 14% 16%;
+    --muted-foreground: 150 8% 62%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
+    --accent: 150 60% 60%; /* soft mint for highlights/links */
+    --accent-foreground: 155 40% 8%;
 
-    --border: 217 33% 18%;
-    --input: 217 33% 18%;
-    --ring: 152 76% 44%;
+    /* Gold — coins, season ring, premium accents. Large surfaces only. */
+    --gold: 42 88% 60%;
+    --gold-foreground: 40 60% 12%;
 
-    --bull: 152 76% 44%;
-    --bear: 0 72% 58%;
+    --destructive: 2 75% 58%;
+    --destructive-foreground: 150 20% 96%;
 
-    --radius: 0.75rem;
+    --border: 156 16% 18%;
+    --input: 156 16% 16%;
+    --ring: 96 78% 56%;
+
+    /* Market sentiment. Up = lime (brand), down = warm red. */
+    --bull: 96 78% 56%;
+    --bear: 2 78% 60%;
+
+    /* League tier identity. */
+    --tier-bronze: 28 60% 52%;
+    --tier-silver: 210 12% 72%;
+    --tier-gold: 42 88% 60%;
+    --tier-diamond: 190 80% 66%;
+    --tier-master: 280 70% 68%;
+
+    --radius: 1rem;
+
+    /* Motion language — durations + easings shared with packages/ui/motion.ts. */
+    --dur-fast: 120ms;
+    --dur: 200ms;
+    --dur-slow: 320ms;
+    --dur-celebrate: 700ms;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   }
 
   .light {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    --background: 150 30% 98%;
+    --background-elevated: 0 0% 100%;
+    --foreground: 155 30% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --primary: 152 76% 36%;
+    --card-foreground: 155 30% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 155 30% 10%;
+    --primary: 96 64% 40%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 263 70% 50%;
+    --secondary: 150 20% 92%;
+    --secondary-foreground: 155 30% 10%;
+    --muted: 150 20% 92%;
+    --muted-foreground: 155 12% 40%;
+    --accent: 150 50% 42%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
+    --gold: 42 80% 46%;
+    --gold-foreground: 0 0% 100%;
+    --destructive: 2 75% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 152 76% 36%;
-    --bull: 152 76% 36%;
-    --bear: 0 72% 51%;
+    --border: 150 16% 86%;
+    --input: 150 16% 86%;
+    --ring: 96 64% 40%;
+    --bull: 96 64% 40%;
+    --bear: 2 75% 51%;
   }
 
   * {
@@ -71,5 +104,16 @@
     /* Respect device safe-areas on mobile (notches, home indicator). */
     padding: env(safe-area-inset-top) env(safe-area-inset-right)
       env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  /* Honor reduced-motion globally; components also check it in JS for springs. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

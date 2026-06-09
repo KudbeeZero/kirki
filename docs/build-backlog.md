@@ -9,6 +9,21 @@ possible), check it off with a one-line note, then commit & push.
 
 ## Phase 1 — MVP (the core product)
 
+### UI Polish — PRIORITY (App-Store mobile game; see /root/.claude/plans/you-know-what-just-sparkling-hartmanis.md)
+These take over the loop ahead of the remaining services (user decision: UI-first, playful & rounded).
+- [x] **(a) Theme + fonts** — forest/lime/gold token set + motion vars (`globals.css`), tailwind config (gold/tier/elevation/`bg-forest`/fonts/flash+shimmer keyframes), `next/font` Plus Jakarta Sans + Inter, themeColor → forest, `docs/design/brand.md`. Web build green; added webpack `extensionAlias` so source `.js` specifiers resolve.
+- [ ] **(b) Tooling** — `cn()`→clsx+tailwind-merge, add cva (ui deps) + framer-motion + lucide-react (ui peers, web deps); `packages/ui/src/motion.ts`.
+- [ ] **(c) Primitives batch 1 (pure)** — skeleton, badge, avatar, coin-icon, mascot, sparkline, progress-bar, progress-ring, tier-badge; Button→cva.
+- [ ] **(d) Client shell** — TabBar+FAB, BottomSheet, Toast, SegmentedControl, AnimatedNumber + hooks; rewire `(app)/layout.tsx` + TradeSheetProvider.
+- [ ] **(e) Dashboard redesign** — greeting, odometer balance, season ring, glance cards, popular currencies w/ sparkline + price-flash.
+- [ ] **(f) Order ticket** — bottom-sheet OrderTicket; trade route → wrapper.
+- [ ] **(g) Leaderboard / Profile / Achievements** — segmented scopes, tier crest, XPBar, achievements grid.
+- [ ] **(h) Onboarding + celebrations** — carousel, CelebrationOverlay, landing/auth polish.
+- [ ] **(i) Skeletons / empty states / pull-to-refresh** — loading.tsx per route, mascot empties.
+- [ ] **(j) App icon / splash / PWA** — manifest + maskable icons + splash.
+
+### Backend services (resume after UI push)
+
 - [x] **Verify toolchain** — `pnpm install` works (network available). Fixed cross-package resolution (path aliases → built `dist` declarations; dropped `composite`). `@simcoin/types`, `shared`, `game-engine` build clean. **game-engine 19 tests + auth-service 9 tests green** (incl. Argon2 + session reuse-detection). Fixed: argon2.verify options, `@types/pg`, ts-jest→CJS config. Remaining services/apps build in later iterations.
 - [x] **packages/shared** — `decimal` (bigint money math) + `redis` facade now covered by **20 unit tests** (no float drift, half-up rounding, div-by-zero, WITHSCORES leaderboard parsing). Added vitest + spec exclusion from build.
 - [x] **packages/game-engine** — all 5 modules (xp/league/season/pnl/achievements) implemented and **fully tested: 40 tests** (added xp 7, pnl 6, season 8). Pure, zero-dep.
@@ -36,6 +51,7 @@ possible), check it off with a one-line note, then commit & push.
 
 ## Session log
 <!-- Each hourly run appends: YYYY-MM-DD HH:MM — <item> — <result/commit> -->
+- 2026-06-09 ~11:30 — UI (a) theme+fonts — forest/lime/gold tokens, Plus Jakarta+Inter, brand.md; web build green.
 - 2026-06-09 07:36 — Verify toolchain — install OK; monorepo build wiring fixed; types/shared/game-engine green; 28 tests passing (game-engine 19, auth 9).
 - 2026-06-09 08:36 — packages/shared tests — decimal + redis facade, 20 tests green; build clean.
 - 2026-06-09 09:28 — game-engine coverage — xp/pnl/season specs added; 40 tests green (full module coverage).
