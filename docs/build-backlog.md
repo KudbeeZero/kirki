@@ -12,7 +12,7 @@ possible), check it off with a one-line note, then commit & push.
 ### UI Polish — PRIORITY (App-Store mobile game; see /root/.claude/plans/you-know-what-just-sparkling-hartmanis.md)
 These take over the loop ahead of the remaining services (user decision: UI-first, playful & rounded).
 - [x] **(a) Theme + fonts** — forest/lime/gold token set + motion vars (`globals.css`), tailwind config (gold/tier/elevation/`bg-forest`/fonts/flash+shimmer keyframes), `next/font` Plus Jakarta Sans + Inter, themeColor → forest, `docs/design/brand.md`. Web build green; added webpack `extensionAlias` so source `.js` specifiers resolve.
-- [ ] **(b) Tooling** — `cn()`→clsx+tailwind-merge, add cva (ui deps) + framer-motion + lucide-react (ui peers, web deps); `packages/ui/src/motion.ts`.
+- [x] **(b) Tooling** — `cn()`→clsx+tailwind-merge, add cva (ui deps) + framer-motion + lucide-react (ui peers, web deps); `packages/ui/src/motion.ts`.
 - [ ] **(c) Primitives batch 1 (pure)** — skeleton, badge, avatar, coin-icon, mascot, sparkline, progress-bar, progress-ring, tier-badge; Button→cva.
 - [ ] **(d) Client shell** — TabBar+FAB, BottomSheet, Toast, SegmentedControl, AnimatedNumber + hooks; rewire `(app)/layout.tsx` + TradeSheetProvider.
 - [ ] **(e) Dashboard redesign** — greeting, odometer balance, season ring, glance cards, popular currencies w/ sparkline + price-flash.

@@ -1,9 +1,12 @@
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
 /**
- * Minimal className combiner. Filters falsy values and joins with spaces.
- *
- * The real design system layers `clsx` + `tailwind-merge`; this dependency-free
- * version keeps the package buildable before those are installed.
+ * Compose class names with `clsx` semantics, then dedupe/resolve conflicting
+ * Tailwind utilities with `tailwind-merge` (so `cn('p-2', cond && 'p-4')`
+ * yields the last-wins `p-4`). The exported signature is unchanged from the
+ * earlier dependency-free version, so callers need no edits.
  */
-export function cn(...parts: Array<string | false | null | undefined>): string {
-  return parts.filter(Boolean).join(' ');
+export function cn(...parts: ClassValue[]): string {
+  return twMerge(clsx(parts));
 }
