@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Simcoin",
+    "slug": "simcoin",
+    "scheme": "simcoin",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0f1e"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.simcoin.mobile"
+    },
+    "android": {
+      "package": "app.simcoin.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0f1e"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "apiUrl": "http://localhost:3000/api"
+    }
+  }
+}

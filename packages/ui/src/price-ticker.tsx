@@ -1,18 +1,22 @@
 import * as React from 'react';
-import type { PriceTick } from '@simcoin/types';
+import type { Decimal } from '@simcoin/types';
 import { cn } from './cn.js';
 
 export interface PriceTickerProps {
-  /** Live price tick from the market service (prices cross the wire as strings). */
-  tick: PriceTick;
+  /** Asset symbol, e.g. "BTC". */
+  symbol: string;
+  /** Current price. Prices cross the wire as decimal strings; numbers accepted. */
+  price: Decimal | number;
+  /** 24h change percent (e.g. "1.8" or -3.2). `null` renders a neutral dash. */
+  change: Decimal | number | null;
   /** Optional human-readable asset name, e.g. "Bitcoin". */
   name?: string;
   className?: string;
 }
 
-function formatPrice(value: string): string {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return value;
+function formatPrice(value: Decimal | number): string {
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n)) return String(value);
   return n.toLocaleString('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -20,9 +24,12 @@ function formatPrice(value: string): string {
   });
 }
 
-function formatChange(pct: string | null): { label: string; direction: 'up' | 'down' | 'flat' } {
+function formatChange(pct: Decimal | number | null): {
+  label: string;
+  direction: 'up' | 'down' | 'flat';
+} {
   if (pct === null) return { label: '—', direction: 'flat' };
-  const n = Number(pct);
+  const n = typeof pct === 'number' ? pct : Number(pct);
   if (!Number.isFinite(n)) return { label: '—', direction: 'flat' };
   const direction = n > 0 ? 'up' : n < 0 ? 'down' : 'flat';
   return { label: `${n > 0 ? '+' : ''}${n.toFixed(2)}%`, direction };
@@ -31,10 +38,10 @@ function formatChange(pct: string | null): { label: string; direction: 'up' | 'd
 /**
  * A compact live-price row: symbol, formatted price, and 24h change tinted
  * bull/bear. Presentational only — the parent owns subscription/polling and
- * passes a fresh {@link PriceTick} on each update.
+ * passes fresh `price`/`change` values on each update.
  */
-export function PriceTicker({ tick, name, className }: PriceTickerProps) {
-  const change = formatChange(tick.change24h);
+export function PriceTicker({ symbol, price, change, name, className }: PriceTickerProps) {
+  const c = formatChange(change);
   return (
     <div
       className={cn(
@@ -42,23 +49,23 @@ export function PriceTicker({ tick, name, className }: PriceTickerProps) {
         'bg-card/60',
         className,
       )}
-      data-symbol={tick.symbol}
+      data-symbol={symbol}
     >
       <div className="flex flex-col">
-        <span className="font-semibold">{tick.symbol}</span>
+        <span className="font-semibold">{symbol}</span>
         {name ? <span className="text-xs text-muted-foreground">{name}</span> : null}
       </div>
       <div className="flex flex-col items-end">
-        <span className="font-mono tabular-nums">{formatPrice(tick.price)}</span>
+        <span className="font-mono tabular-nums">{formatPrice(price)}</span>
         <span
           className={cn(
             'text-xs font-medium',
-            change.direction === 'up' && 'text-bull',
-            change.direction === 'down' && 'text-bear',
-            change.direction === 'flat' && 'text-muted-foreground',
+            c.direction === 'up' && 'text-bull',
+            c.direction === 'down' && 'text-bear',
+            c.direction === 'flat' && 'text-muted-foreground',
           )}
         >
-          {change.label}
+          {c.label}
         </span>
       </div>
     </div>

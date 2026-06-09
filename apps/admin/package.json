@@ -1,0 +1,31 @@
+{
+  "name": "@simcoin/admin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simcoin internal operations console — user search, season controls, audit log, market toggles.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p ${ADMIN_PORT:-3001}",
+    "build": "next build",
+    "start": "next start -p ${ADMIN_PORT:-3001}",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@simcoin/sdk": "workspace:*",
+    "@simcoin/types": "workspace:*",
+    "@simcoin/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.0"
+  }
+}
