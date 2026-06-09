@@ -11,7 +11,7 @@ possible), check it off with a one-line note, then commit & push.
 
 - [x] **Verify toolchain** — `pnpm install` works (network available). Fixed cross-package resolution (path aliases → built `dist` declarations; dropped `composite`). `@simcoin/types`, `shared`, `game-engine` build clean. **game-engine 19 tests + auth-service 9 tests green** (incl. Argon2 + session reuse-detection). Fixed: argon2.verify options, `@types/pg`, ts-jest→CJS config. Remaining services/apps build in later iterations.
 - [x] **packages/shared** — `decimal` (bigint money math) + `redis` facade now covered by **20 unit tests** (no float drift, half-up rounding, div-by-zero, WITHSCORES leaderboard parsing). Added vitest + spec exclusion from build.
-- [ ] **packages/game-engine** — finish xp/league/season/pnl/achievements + expand tests to full coverage.
+- [x] **packages/game-engine** — all 5 modules (xp/league/season/pnl/achievements) implemented and **fully tested: 40 tests** (added xp 7, pnl 6, season 8). Pure, zero-dep.
 - [ ] **market-service** — runnable CoinGecko ingestion loop → Redis cache → `market_data` persistence → `price.tick` publish → WS gateway. Add a fake provider for tests.
 - [ ] **trading-service** — order engine: validate vs cash/holdings, market fill at live price, limit matching on ticks, write `orders`+`transactions`, publish `order.filled`/`trade.executed`. Unit tests for fill math.
 - [ ] **portfolio-service** — mark-to-market totals, realized/unrealized PnL, win rate, stats; subscribe to `trade.executed`. Tests.
@@ -38,3 +38,4 @@ possible), check it off with a one-line note, then commit & push.
 <!-- Each hourly run appends: YYYY-MM-DD HH:MM — <item> — <result/commit> -->
 - 2026-06-09 07:36 — Verify toolchain — install OK; monorepo build wiring fixed; types/shared/game-engine green; 28 tests passing (game-engine 19, auth 9).
 - 2026-06-09 08:36 — packages/shared tests — decimal + redis facade, 20 tests green; build clean.
+- 2026-06-09 09:28 — game-engine coverage — xp/pnl/season specs added; 40 tests green (full module coverage).
