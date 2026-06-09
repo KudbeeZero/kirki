@@ -11,6 +11,10 @@ Players start with simulated money, trade simulated assets against real prices, 
 in 30-day seasons, climb rank leagues, unlock cosmetics, learn crypto concepts, and
 collect achievements.
 
+> ### ▶️ Want to run it? See **[QUICKSTART.md](./QUICKSTART.md)** — the web app is
+> two commands (`pnpm install` then `pnpm --filter @simcoin/web dev`) and needs no
+> database.
+
 ---
 
 ## What's in this repository

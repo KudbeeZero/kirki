@@ -91,6 +91,23 @@ CREATE TABLE market_data (
 CREATE INDEX market_data_recent_idx ON market_data (symbol, ts DESC);
 
 -- ════════════════════════════════════════════════════════════════════════
+-- Seasons                                                              [P4][P1]
+-- ════════════════════════════════════════════════════════════════════════
+-- Defined before portfolios because a portfolio references the season it
+-- belongs to (seasonal resets create a fresh portfolio while preserving
+-- history). Forward-only DDL must create referenced tables first.
+CREATE TABLE seasons (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name         TEXT NOT NULL,                        -- 'Season 1'
+    starts_at    TIMESTAMPTZ NOT NULL,
+    ends_at      TIMESTAMPTZ NOT NULL,
+    starting_cash NUMERIC(24, 8) NOT NULL DEFAULT 100000,
+    is_active    BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX one_active_season_idx ON seasons (is_active) WHERE is_active;
+
+-- ════════════════════════════════════════════════════════════════════════
 -- Portfolios, positions, orders, transactions                         [P1]
 -- ════════════════════════════════════════════════════════════════════════
 -- A portfolio is a player's simulated account, scoped to a season so that
@@ -148,19 +165,8 @@ CREATE TABLE transactions (
 CREATE INDEX transactions_portfolio_idx ON transactions (portfolio_id, created_at DESC);
 
 -- ════════════════════════════════════════════════════════════════════════
--- Seasons & leagues                                                    [P4][P1]
+-- Leagues                                                              [P1]
 -- ════════════════════════════════════════════════════════════════════════
-CREATE TABLE seasons (
-    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name         TEXT NOT NULL,                        -- 'Season 1'
-    starts_at    TIMESTAMPTZ NOT NULL,
-    ends_at      TIMESTAMPTZ NOT NULL,
-    starting_cash NUMERIC(24, 8) NOT NULL DEFAULT 100000,
-    is_active    BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE UNIQUE INDEX one_active_season_idx ON seasons (is_active) WHERE is_active;
-
 -- Membership of a user in a tier for a given season.
 CREATE TABLE leagues (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
